@@ -10,20 +10,19 @@ import sklearn
 import xgboost as xgb
 
 st.set_page_config(
-    page_title="Heart Attack Prediction",
+    page_title="Heart Disease Prediction",
     page_icon=":anatomical_heart:",
 )
 
 st.write(
     """
-    # Heart Attack Prediction :anatomical_heart:
-    This web app is capable of forecasting the probability of getting a heart disease and is trained using 6 different type of models. Namely, Neural Network (Default Model), Logistic Regression, Decision Tree, Random Forest, XG Boost and K Nearest Neighbors.
-    Feel free to explore around :point_down:
+    # Heart Disease Prediction :anatomical_heart:
+    This web app is capable of forecasting the probability of getting a heart disease and is trained using 6 different type of models listed here: Neural Network (Default Model), Logistic Regression, Decision Tree, Random Forest, XG Boost and K Nearest Neighbors.
+    You could choose any of the models listed above to train the model and predict the probability of getting a heart disease by clicking the dropdown menu on the sidebar. :point_left:
     The data used to train the model were obtained from Kaggle. You can check out the dataset [here](https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset).
-    If you are interested in the code, you can check it out [here](https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset).
+    If you are interested in the code, you can check it out [here](https://github.com/Melo04/heart-disease-prediction/blob/main/notebook.ipynb).
     """
 )
-st.write(xgb.__version__)
 
 class Toc:
     def __init__(self):
