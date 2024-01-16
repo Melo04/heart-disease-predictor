@@ -85,7 +85,7 @@ streamlit-toggle-switch==1.0.2
 streamlit-vertical-slider==2.5.5
 tenacity==8.2.3
 tensorboard==2.11.2
-tensorboard-data-server==0.7.2
+tensorboard-data-server==0.6.1
 tensorflow-cpu==2.11.0
 tensorflow==2.11.0
 tensorflow-estimator==2.11.0
