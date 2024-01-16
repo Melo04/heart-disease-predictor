@@ -1,0 +1,6 @@
+[server]
+port = 5800
+
+[theme]
+base="dark"
+primaryColor="#5C61FF"
