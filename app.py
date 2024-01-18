@@ -6,21 +6,35 @@ import seaborn as sns
 import tensorflow as tf
 import re
 import pickle
-import sklearn
-import xgboost as xgb
+import time
+from streamlit_extras.let_it_rain import rain
 
 st.set_page_config(
-    page_title="Heart Disease Prediction",
+    page_title="Heart Disease Predictor",
     page_icon=":anatomical_heart:",
+)
+progress_text = "Loading..."
+my_bar = st.progress(0, text=progress_text)
+for percent_complete in range(100):
+    time.sleep(0.05)
+    my_bar.progress(percent_complete + 1, text=f"{percent_complete + 1}%  Loading...")
+my_bar.empty()
+
+st.write(
+    """
+    # Heart Disease Prediction System :anatomical_heart:
+    This web app is capable of forecasting the probability of getting a heart disease and it is trained using 6 different type of models listed here: Neural Network (Default Model), Logistic Regression, Decision Tree, Random Forest, XG Boost and K Nearest Neighbors.
+    Neural Network is the default model used to train the dataset as it has the highest accuracy among the other models. Nevertheless,
+    you could choose any of the models listed above to train the model by clicking the dropdown menu on the sidebar :point_left: .
+    Get to know the models accuracy score with the [data visualization here](#models-accuracy-score).
+    """
 )
 
 st.write(
     """
-    # Heart Disease Prediction :anatomical_heart:
-    This web app is capable of forecasting the probability of getting a heart disease and is trained using 6 different type of models listed here: Neural Network (Default Model), Logistic Regression, Decision Tree, Random Forest, XG Boost and K Nearest Neighbors.
-    You could choose any of the models listed above to train the model and predict the probability of getting a heart disease by clicking the dropdown menu on the sidebar. :point_left:
+    ##### About the Dataset
     The data used to train the model were obtained from Kaggle. You can check out the dataset [here](https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset).
-    If you are interested in the code, you can check it out [here](https://github.com/Melo04/heart-disease-prediction/blob/main/notebook.ipynb).
+    If you are interested in the code, you can check the jupyter notebook [here](https://github.com/Melo04/heart-disease-prediction/blob/main/notebook.ipynb).
     """
 )
 
@@ -53,9 +67,7 @@ class Toc:
 toc = Toc()
 st.sidebar.title("Table of contents")
 toc.placeholder(sidebar=True)
-st.sidebar.markdown('---')
-
-choose_model = st.sidebar.selectbox("Choose a model to train", ["Neural Network (Default)", "Logistic Regression", "Decision Tree", "Random Forest", "XG Boost", "K Nearest Neighbors"])
+choose_model = st.sidebar.selectbox("Choose a model to train", ["Neural Network (Default)", "Logistic Regression", "Decision Tree", "Random Forest", "XGBoost", "K Nearest Neighbors"])
 
 st.markdown('---')
 toc.header('Data Dictionary 📖')
@@ -63,10 +75,10 @@ st.write("""
         | Variable | Definition | Key |
         | --- | --- | --- |
         | Age | Age Of the patient | |
-        | Sex | Sex of the patient | 1 = male; 2 = female; |
-        | exang | exercise induced anigna | 1 = yes; 0 = no |
+        | Sex | Sex of the patient | 0 = male; 1 = female; |
+        | exang | exercise induced anigna | 0 = no; 1 = yes; |
         | caa | number of major vessels | 0-3 |
-        | cp | Chess Pain type | 1 = typical anigma; 2 = atypical anigma; 3 = non-anginal pain; 4 = asymptomatic |
+        | cp | Chest Pain type | 1 = typical anigma; 2 = atypical anigma; 3 = non-anginal pain; 4 = asymptomatic |
         | trtbps | resting blood pressure (in mm Hg) |  |
         | chol | cholestoral in mg/dl fetched via BMI sensor |  |
         | fbs | fasting blood sugar > 120 mg/dl | 1 = true; 0 = false |
@@ -104,12 +116,28 @@ def load_data(nrows):
 
 df = load_data(10000)
 st.markdown('---')
-toc.header('Training Dataset')
+toc.header('Dataset 📌')
 st.write(df)
 
 st.markdown('---')
 toc.header('Data Visualisation 📊')
 
+toc.subheader('Models Accuracy Score')
+fig, ax = plt.subplots()
+models = ['Logistic Regression', 'Decision Tree', 'Random Forest', 'XGBoost', 'K-Nearest Neighbor', 'Neural Network']
+accuracy = [86.89, 83.61, 85.25, 86.89, 91.80, 92.116]
+bar_colors=['#A9BCD0', '#1C2541', '#3A506B', '#5BC0BE', '#6FFFE9']
+bars = ax.bar(models, accuracy, label=models, color=bar_colors, width=0.6)
+plt.xticks(rotation=45, ha='right')
+ax.set_ylabel('Accuracy')
+ax.set_title('Models Accuracy Score')
+ax.legend(title='Models')
+for bar, acc in zip(bars, accuracy):
+    ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{acc:.2f}%', ha='center', va='bottom')
+st.pyplot(fig)
+st.markdown('---')
+
+toc.subheader('Heart Disease Percentage')
 f, ax = plt.subplots(1, 2, figsize=(16,8))
 df["output"].replace({0:"No Heart Disease", 1:"Heart Disease"}).value_counts().plot(kind='pie', colors=["#ACFF94", "#80FFE9"], ax=ax[0], explode=[0,0.1], autopct='%1.2f%%', shadow=True)
 df["output"].replace({0:"No Heart Disease", 1:"Heart Disease"}).value_counts().plot(kind='bar', color=["#ACFF94", "#80FFE9"], ax=ax[1])
@@ -121,7 +149,7 @@ ax[1].set_title('Heart Disease Count')
 st.pyplot(f)
 st.markdown('---')
 
-st.write("""Correlation Matrix of the Dataset""")
+toc.subheader('Correlation Matrix of the Dataset')
 corr_matrix = df.corr()
 fig, ax = plt.subplots(figsize=(15,10))
 ax = sns.heatmap(corr_matrix, annot=True, linewidths=0.5, fmt=".2f", cmap="YlGnBu")
@@ -137,10 +165,12 @@ st.pyplot(fg)
 
 
 st.markdown('---')
-toc.header('Predict Heart Attack')
+toc.header('Predict Likelihood of getting a Heart Disease 🤞')
+st.write("You can compare the models by taking note of the probability for getting a heart disease. Take note that decision tree and random forest has the lowest accuracy, hence their prediction might not be accurate.")
+st.write("""Sample dataset from Kaggle: """)
+st.code("High Possibility Of Getting a Heart Disease: 63, female, asymptomatic, 145, 233, true, normal, 150, no, 2.3, downsloping, 0, 1   ")
+st.code("Low Possibility Of Getting a Heart Disease: 43, male, typical angina, 132, 341, true, normal, 136, yes, 3.0, flat, 0, 3   ")
 form = st.form(key='my_form')
-form.header("Fill in the form below to predict heart attack.")
-
 
 toc.generate()
 
@@ -157,7 +187,7 @@ def user_input_features():
     oldpeak = form.slider('Old Peak', 0.0, 6.2, 1.0)
     slp =form.selectbox('Slope', ('Upsloping', 'Flat', 'Downsloping'))
     caa = form.slider('Number of Major Vessels', 0, 3, 1)
-    thall = form.slider('Thal Rate', 0, 3, 1)
+    thall = form.slider('Thal Rate (Thallium Stress Test)', 0, 3, 1)
 
     sex_num = 1 if sex == 'Male' else 0
     cp_num = 0 if cp == 'Typical Angina' else 1 if cp == 'Atypical Angina' else 2 if cp == 'Non-Anginal Pain' else 3
@@ -184,7 +214,7 @@ def user_input_features():
     return input_data
 
 df_input = user_input_features()
-predict = form.form_submit_button(label='Predict')
+predict = form.form_submit_button(label='Predict :crossed_fingers:')
 
 def open_model(filename):
     with open(filename, 'rb') as file:
@@ -193,38 +223,63 @@ def open_model(filename):
 
 if predict:
     user_input = pd.DataFrame(data=df_input, index=[1])
-    st.write(user_input)
-
     if choose_model == "Neural Network (Default)":
-        model_filename = './model/neural_network_model.h5'
-        model = tf.keras.models.load_model(model_filename)
+        filename = './model/neural_network_model.h5'
+        model = tf.keras.models.load_model(filename)
     elif choose_model == "Logistic Regression":
-        model_filename = './model/logistic_model.pkl'
-        model = open_model(model_filename)
+        filename = './model/logistic_model.pkl'
     elif choose_model == "Decision Tree":
-        model_filename = './model/decision_tree_model.pkl'
-        model = open_model(model_filename)
+        filename = './model/decision_tree_model.pkl'
     elif choose_model == "Random Forest":
-        model_filename = './model/random_forest_model.pkl'
-        model = open_model(model_filename)
-    elif choose_model == "XG Boost":
-        model_filename = './model/xgb_model.pkl'
-        model = open_model(model_filename)
+        filename = './model/random_forest_model.pkl'
+    elif choose_model == "XGBoost":
+        filename = './model/xgb_model.pkl'
     elif choose_model == "K Nearest Neighbors":
-        model_filename = './model/knn_model.pkl'
-        model = open_model(model_filename)
+        filename = './model/knn_model.pkl'
+    if choose_model != "Neural Network (Default)":
+        model = open_model(filename)
 
-    prediction = model.predict(user_input)
-    st.write(model)
+    prediction = model.predict(user_input.values)
+    st.write("Using model: ")
+    if choose_model == "XGBoost":
+        st.write("XGBoost")
+    else:
+        st.write(model)
     if choose_model == "Neural Network (Default)":
         threshold = 0.5
         binary_predictions = (prediction > threshold).astype(int)
         attack = prediction[0][0]
-        st.write(f'Your chance of getting a heart attack is {(attack*100):.2f}%')
-        st.write('You have a high chance of getting a heart attack :skull:' if binary_predictions[0] == 1 else 'You have a low chance of getting a heart attack :tada:')
-    else:
-        probability = model.predict_proba(user_input)
-        if prediction[0] == 0:
-            st.write(f'You have a low chance of getting a heart attack with a probability of {probability[0][0]*100}% :tada:')
+        if binary_predictions[0] == 0:
+            rain(
+                emoji="🎉",
+                font_size=54,
+                falling_speed=5,
+                animation_length=0.5,
+            )
+            st.success(f'Congrats, You have a low probability of getting a heart disease with a probability of {100 - (attack*100):.2f}% :tada:')
         else:
-            st.write(f'You have a high chance of getting a heart attack with a probability of {probability[0][1]*100}% :skull:')
+            rain(
+                emoji="💀",
+                font_size=54,
+                falling_speed=5,
+                animation_length=0.5,
+            )
+            st.error(f'RIP, You have a high possibility of getting a heart disease with a probability of {(attack*100):.2f}% :skull:')
+    else:
+        probability = model.predict_proba(user_input.values)
+        if prediction[0] == 0:
+            rain(
+                emoji="🎉",
+                font_size=54,
+                falling_speed=5,
+                animation_length=0.5,
+            )
+            st.success(f'Congrats, You have a low possibility of getting a heart disease with a probability of {(probability[0][0]*100):.2f}% :tada:')
+        else:
+            rain(
+                emoji="💀",
+                font_size=54,
+                falling_speed=5,
+                animation_length=0.5,
+            )
+            st.error(f'RIP, You have a high possibility of getting a heart disease with a probability of {(probability[0][1]*100):.2f}% :skull:')
